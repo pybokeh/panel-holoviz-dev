@@ -47,14 +47,14 @@ def covid19TimeSeries(iso_date: str, top: int=5) -> Panel:
     df_final.index: DateTimeIndex = [datetime.strptime(date, '%m/%d/%Y') for date in df_final.index]
     
     panel_app: Panel = pn.Row(df_final['2020-03-10':].iloc[:, range(top)].hvplot(
-                           title='Top 5 U.S. States COVID-19',
+                           title=f'Top {top} U.S. States COVID-19',
                            width=800,
                            height=600,
                            ylabel='# of Confirmed Cases',
                            xlabel='Date',
                            legend='bottom'
                            ),
-                           df_final['2020-03-10':].iloc[:, range(5)].hvplot.table(sortable=True, selectable=True, width=600)
+                           df_final['2020-03-10':].iloc[:, range(top)].hvplot.table(sortable=True, selectable=True, width=600)
                        )
     
     return panel_app
