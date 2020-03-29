@@ -73,7 +73,7 @@ def covid19TimeSeries(iso_date: str, country: str='US', top: int=5) -> Panel:
     
     df_final.index: DateTimeIndex = [datetime.strptime(date, '%m/%d/%Y') for date in df_final.index]
     
-    if country in['Australia', 'Canada', 'China', 'Denmark', 'France', 'Netherlands', 'United Kingdom', 'US']:
+    if country in['Australia', 'Canada', 'Denmark', 'France', 'Netherlands', 'United Kingdom', 'US']:
         panel_app: Panel = pn.Row(df_final['2020-03-10':].iloc[:, range(top)].hvplot(
                                title=f'{country}: Top {top} Provinces/States with COVID-19',
                                width=800,
@@ -84,10 +84,26 @@ def covid19TimeSeries(iso_date: str, country: str='US', top: int=5) -> Panel:
                                yformatter='%d'
                                ),
                                df_final['2020-03-10':].iloc[:, range(top)].hvplot.table(
-                                                                                sortable=True,
-                                                                                selectable=True,
-                                                                                width=600
-                                                                            )
+                                                                                      sortable=True,
+                                                                                      selectable=True,
+                                                                                      width=600
+                                                                                  )
+                           )
+    elif 'China' in country:
+        panel_app: Panel = pn.Row(df_final.iloc[:, range(top)].hvplot(
+                               title=f'{country}: Top {top} Provinces/States with COVID-19',
+                               width=800,
+                               height=600,
+                               ylabel='# of Confirmed Cases',
+                               xlabel='Date',
+                               legend='bottom',
+                               yformatter='%d'
+                               ),
+                               df_final.iloc[:, range(top)].hvplot.table(
+                                                                                      sortable=True,
+                                                                                      selectable=True,
+                                                                                      width=600
+                                                                                  )
                            )
     else:
         df_final = df_final[country].astype(int)
