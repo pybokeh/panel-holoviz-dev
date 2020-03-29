@@ -13,8 +13,7 @@ Panel = TypeVar('pn.layout.Row')
 
 
 def covid19TimeSeries(iso_date: str, country: str='US', top: int=5) -> Panel:
-    """Function that returns a Panel dashboard displaying confirmed COVID-19
-    cases
+    """Function that returns a Panel dashboard displaying confirmed COVID-19 cases
     SOURCE of data:
     https://www.soothsawyer.com/wp-content/uploads/2020/03/time_series_19-covid-Confirmed.csv
 
