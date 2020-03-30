@@ -1,28 +1,30 @@
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
-from typing import TypeVar
+from typing import TypeVar, List
 import hvplot.pandas
 import pandas as pd
 import panel as pn
 import platform
 DataFrame = TypeVar('pd.core.frame.DataFrame')
 Date = TypeVar('datetime.date')
+DatePicker = TypeVar('panel.widgets.input.DatePicker')
 DateTimeIndex = TypeVar('pd.core.indexes.datetimes.DatetimeIndex')
 Panel = TypeVar('pn.layout.Row')
+Select = TypeVar('panel.widgets.select.Select')
 
 # Create a list of countries to be used in making a selection widget
-url = 'https://www.soothsawyer.com/wp-content/uploads/2020/03/time_series_19-covid-Confirmed.csv'
-df = pd.read_csv(url)
-countries = df['Country/Region'].unique().tolist()
+url: str = 'https://www.soothsawyer.com/wp-content/uploads/2020/03/time_series_19-covid-Confirmed.csv'
+df: DataFrame = pd.read_csv(url)
+countries: List[str] = df['Country/Region'].unique().tolist()
 
 # Create input widgets: date widget and 2 selection widgets
 # There is bug in the date widget in version 0.9.3: https://github.com/holoviz/panel/issues/1173
 # Manually fixed the bug by modifying input.py source file
 # Make default date yesterday (today minus 1 day) since COVID-19 data is usually 1 day behind
-covid19_date = pn.widgets.DatePicker(name='Date:', value=(date.today() + timedelta(days=-1)))
-country = pn.widgets.Select(name='Country:', options=countries, value='US')
-top = pn.widgets.Select(name='Top N Province/State:', options=[5, 10], value=5)
+covid19_date: DatePicker = pn.widgets.DatePicker(name='Date:', value=(date.today() + timedelta(days=-1)))
+country: Select = pn.widgets.Select(name='Country:', options=countries, value='US')
+top: Select = pn.widgets.Select(name='Top N Province/State:', options=[5, 10], value=5)
 
 @pn.depends(covid19_date.param.value, country.param.value, top.param.value)
 def covid19TimeSeries(covid19_date: Date, country: str='US', top: int=5) -> Panel:
@@ -55,7 +57,7 @@ def covid19TimeSeries(covid19_date: Date, country: str='US', top: int=5) -> Pane
         data_date: str = date.fromisoformat(iso_date).strftime('%#m/%#d/%Y')
 
     # Source of COVID-19 data        
-    url = 'https://www.soothsawyer.com/wp-content/uploads/2020/03/time_series_19-covid-Confirmed.csv'
+    url: str = 'https://www.soothsawyer.com/wp-content/uploads/2020/03/time_series_19-covid-Confirmed.csv'
     df: DataFrame = pd.read_csv(url)
 
     if 'US' in country:
