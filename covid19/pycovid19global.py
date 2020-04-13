@@ -5,12 +5,14 @@ from typing import TypeVar, List
 import hvplot.pandas
 import pandas as pd
 import panel as pn
+# These are related to optional type annotations
 DataFrame = TypeVar('pd.core.frame.DataFrame')
 Date = TypeVar('datetime.date')
 DatePicker = TypeVar('panel.widgets.input.DatePicker')
 DateTimeIndex = TypeVar('pd.core.indexes.datetimes.DatetimeIndex')
 Panel = TypeVar('pn.layout.Row')
 MultiChoice = TypeVar('panel.widgets.select.MultiChoice')
+RangeIndex = TypeVar('pandas.core.indexes.range.RangeIndex')
 Select = TypeVar('panel.widgets.select.Select')
 
 url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
@@ -61,10 +63,10 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
     # JHU have not been consistent with their year format (YYYY vs YY).
     # Therefore, added try/except clause to account for both formats
     try:
-        df_countries.index: DateTimeIndex = [datetime.strptime(date, '%m/%d/%y') for date in df_countries.index]
+        df_countries.index: RangeIndex = [datetime.strptime(date, '%m/%d/%y') for date in df_countries.index]
     except ValueError as e:
         print("YY year format not detected.  Using YYYY instead.", e)
-        df_countries.index: DateTimeIndex = [datetime.strptime(date, '%m/%d/%Y') for date in df_countries.index]
+        df_countries.index: RangeIndex = [datetime.strptime(date, '%m/%d/%Y') for date in df_countries.index]
 
     # If only one country is selected, then also provide a data table containing counts by date
     if len(country) == 1:
@@ -102,9 +104,9 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
     return panel_app
 
 global_app = pn.Column(
-          covid19_date,
-          country,
-          ylog,
-          covid19TimeSeriesByCountry
-      )
+                       covid19_date,
+                       country,
+                       ylog,
+                       covid19TimeSeriesByCountry
+                      )
 
