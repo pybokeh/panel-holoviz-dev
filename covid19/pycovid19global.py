@@ -32,7 +32,6 @@ ylog: Select = pn.widgets.Select(name='log-y?', value=False, options=[True, Fals
 def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], ylog: bool=False) -> Panel:
     """Function that returns a Panel dashboard displaying confirmed COVID-19 cases
     It is using Panel's "Reactive functions" API: https://panel.holoviz.org/user_guide/APIs.html
-
     Parameters
     ----------
     covid19_date : Date
@@ -41,7 +40,6 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
         One or more countries for which you would like to obtain data for (default='US')
     ylog: bool
         Whether or not to apply log scaling to y-axis.  Default is False
-
     Returns
     -------
     Panel object
@@ -80,13 +78,18 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
                                legend='bottom',
                                yformatter='%d'
                               ),
-                              df_countries[:iso_date].loc[:, country]
-                                                     .sort_values(by=df_countries[:iso_date].loc[:, country].columns[0], ascending=False)
+                              df_countries[:iso_date].loc[:, country].sort_values(by=df_countries[:iso_date].loc[:, country].columns[0], ascending=False)
+                                                     .merge(df_countries[:iso_date].loc[:, country].sort_values(by=df_countries[:iso_date]
+                                                            .loc[:, country].columns[0], ascending=False
+                                                           )
+                                                     .diff(), how='inner', left_index=True, right_index=True)
+                                                     .reset_index()
+                                                     .rename(columns={'index': 'Date', f'{country[0]}_x': 'Cum. Qty', f'{country[0]}_y': 'Difference'})
                                                      .hvplot.table(sortable=True,
-                                                          selectable=True,
-                                                          width=300,
-                                                          height=500
-                                                      )
+                                                                   selectable=True,
+                                                                   width=300,
+                                                                   height=500
+                                                                  )  
                            )
     else:
         panel_app: Panel = pn.Row(df_countries[:iso_date].loc[:, country].hvplot(
@@ -109,4 +112,3 @@ global_app = pn.Column(
                        ylog,
                        covid19TimeSeriesByCountry
                       )
-

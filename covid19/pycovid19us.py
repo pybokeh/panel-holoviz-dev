@@ -53,7 +53,6 @@ ylog = pn.widgets.Select(name='log-y?', value=False, options=[True, False], widt
 def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog: bool=False) -> Panel:
     """Function that returns a Panel dashboard displaying confirmed COVID-19 cases
     It is using Panel's "Reactive functions" API: https://panel.holoviz.org/user_guide/APIs.html
-
     Parameters
     ----------
     covid19_date : Date
@@ -62,7 +61,6 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
         State for which you would like to obtain data for (default='Ohio')
     ylog : bool
         To enable log scaling or not on y-axis.  Log scale can be useful to easily discern growth rate.
-
     Returns
     -------
     Panel object
@@ -155,16 +153,19 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
                                                                        width=300,
                                                                        height=500
                                            ),
-                                           # A data tableof counts by confirmed case date
-                                           df_by_state_ts.loc[:, state_province]
-                                                         .sort_values(by=state_province, ascending=False)
-                                                         .reset_index()
-                                                         .rename(columns={'index': 'Date', state_province[0]: 'Cum. Qty'})
-                                                         .hvplot.table(sortable=True,
-                                                             selectable=True,
-                                                             width=300,
-                                                             height=500
-                                           )
+                                           # A data table of counts by state with difference between rows
+                                           (df_by_state_ts.loc[:, state_province]
+                                                          .sort_values(by=state_province, ascending=False)
+                                                          .rename(columns={'index': 'Date', state_province[0]: 'Cum. Qty'})
+                                           ).merge((df_by_state_ts.loc[:, state_province]
+                                                                  .sort_values(by=state_province, ascending=False)
+                                                                  .rename(columns={'index': 'Date', state_province[0]: 'Cum. Qty'})
+                                                   ).diff(), how='inner', left_index=True, right_index=True
+                                                  )
+                                            .rename(columns={'Cum. Qty_x':'Cum. Qty', 'Cum. Qty_y': 'Difference'})
+                                            .reset_index()
+                                            .rename(columns={'index': 'Date'})
+                                            .hvplot.table(sortable=True, selectable=True, width=300, height=500)
                                      ),
                                      # A plotly choropleth Figure
                                      fig
@@ -185,7 +186,6 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
                            )
 
     return panel_app
-
 
 # Final Panel object
 us_app = pn.Column(
