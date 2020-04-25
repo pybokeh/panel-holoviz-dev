@@ -26,10 +26,12 @@ countries_list: List[str] = df['Country/Region'].unique().tolist()
 covid19_date: DatePicker = pn.widgets.DatePicker(name='Date:', value=(date.today() + timedelta(days=-1)))
 country: MultiChoice = pn.widgets.MultiChoice(name='Country:', value=['US'],
     options=countries_list)
+confirmed_deaths = pn.widgets.Select(name='Confirmed Cases or Deaths:', value='Confirmed Cases', options=['Confirmed Cases', 'Deaths'],
+                                     width=200, css_classes=['grey-theme'])
 ylog: Select = pn.widgets.Select(name='log-y?', value=False, options=[True, False])
 
-@pn.depends(covid19_date.param.value, country.param.value, ylog.param.value)
-def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], ylog: bool=False) -> Panel:
+@pn.depends(covid19_date.param.value, confirmed_deaths.param.value, country.param.value, ylog.param.value)
+def covid19TimeSeriesByCountry(covid19_date: Date, confirmed_deaths: str, country: List[str]=['US'], ylog: bool=False) -> Panel:
     """Function that returns a Panel dashboard displaying confirmed COVID-19 cases
     It is using Panel's "Reactive functions" API: https://panel.holoviz.org/user_guide/APIs.html
     Parameters
@@ -38,6 +40,8 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
         End date of data you wish to obtain up to
     country : List[str]
         One or more countries for which you would like to obtain data for (default='US')
+    confirmed_deaths : str
+        Option to choose # of confirmed cases or # of deaths from Covid-19
     ylog: bool
         Whether or not to apply log scaling to y-axis.  Default is False
     Returns
@@ -47,8 +51,11 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
     
     iso_date: str = covid19_date.strftime('%Y-%m-%d')
 
-    # Source of COVID-19 data        
-    url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
+    # Source of COVID-19 data
+    if confirmed_deaths == 'Confirmed Cases':
+        url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
+    else:
+        url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
     df: DataFrame = pd.read_csv(url)
 
     df_countries: DataFrame = (df.drop(columns=['Province/State', 'Lat', 'Long'])
@@ -69,14 +76,15 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
     # If only one country is selected, then also provide a data table containing counts by date
     if len(country) == 1:
         panel_app: Panel = pn.Row(df_countries[:iso_date].loc[:, country].hvplot(
-                               title='Confirmed COVID-19 Cases',
+                               title='COVID-19 ' + confirmed_deaths,
                                logy=ylog,
                                width=700,
                                height=500,
-                               ylabel='# of Confirmed Cases',
+                               ylabel='# of ' + confirmed_deaths,
                                xlabel='Date',
                                legend='bottom',
-                               yformatter='%d'
+                               yformatter='%d',
+                               grid=True
                               ),
                               df_countries[:iso_date].loc[:, country].sort_values(by=df_countries[:iso_date].loc[:, country].columns[0], ascending=False)
                                                      .merge(df_countries[:iso_date].loc[:, country].sort_values(by=df_countries[:iso_date]
@@ -93,14 +101,15 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
                            )
     else:
         panel_app: Panel = pn.Row(df_countries[:iso_date].loc[:, country].hvplot(
-                               title='Confirmed COVID-19 Cases',
+                               title='COVID-19 ' + confirmed_deaths,
                                logy=ylog,
                                width=700,
                                height=500,
-                               ylabel='# of Confirmed Cases',
+                               ylabel='# of ' + confirmed_deaths,
                                xlabel='Date',
                                legend='bottom',
-                               yformatter='%d'
+                               yformatter='%d',
+                               grid=True
                               )
                            )
 
@@ -109,6 +118,7 @@ def covid19TimeSeriesByCountry(covid19_date: Date, country: List[str]=['US'], yl
 global_app = pn.Column(
                        covid19_date,
                        country,
+                       confirmed_deaths,
                        ylog,
                        covid19TimeSeriesByCountry
                       )

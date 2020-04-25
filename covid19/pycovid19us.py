@@ -47,10 +47,13 @@ covid19_date: DatePicker = pn.widgets.DatePicker(name='Date:', value=(date.today
                                                 )
 state_province = pn.widgets.MultiChoice(name='State of Province', value=['Ohio'],
     options=states_provinces)
+confirmed_deaths = pn.widgets.Select(name='Confirmed Cases or Deaths:', value='Confirmed Cases',
+                                     options=['Confirmed Cases', 'Deaths'],
+                                     width=200, css_classes=['grey-theme'])
 ylog = pn.widgets.Select(name='log-y?', value=False, options=[True, False], width=200, css_classes=['grey-theme'])
 
-@pn.depends(covid19_date.param.value, state_province.param.value, ylog.param.value)
-def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog: bool=False) -> Panel:
+@pn.depends(covid19_date.param.value, state_province.param.value, confirmed_deaths.param.value, ylog.param.value)
+def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], confirmed_deaths: str, ylog: bool=False) -> Panel:
     """Function that returns a Panel dashboard displaying confirmed COVID-19 cases
     It is using Panel's "Reactive functions" API: https://panel.holoviz.org/user_guide/APIs.html
     Parameters
@@ -59,6 +62,8 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
         End date of data you wish to obtain up to
     state_province : str
         State for which you would like to obtain data for (default='Ohio')
+    confirmed_deaths : str
+        Choose number of confirmed cases or number of deaths from Covid-19
     ylog : bool
         To enable log scaling or not on y-axis.  Log scale can be useful to easily discern growth rate.
     Returns
@@ -82,10 +87,16 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
         geo_data = json.load(response)
 
     # Source of COVID-19 data
+    if confirmed_deaths == 'Confirmed Cases':
+        url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv'
+    else:
+        url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv'
+
     # To leverage Plotly's choropleth_mapbox function, need to have FIPS as fixed length(n=5) values consisting of leading zeros
-    url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv'
     df: DataFrame = pd.read_csv(url, converters={'FIPS': lambda x: int(float(x)) if x != '' else x}).query("FIPS != ''")
     df['FIPS']: Series = df['FIPS'].astype('str').str.zfill(5)
+    if 'Population' in df.columns:
+        df.drop(columns='Population', inplace=True)
 
     df_by_state: DataFrame = (df.query("not Province_State in('Diamond Princess', 'Grand Princess')")
                                 .drop(columns=['UID', 'iso2', 'iso3', 'code3', 'FIPS', 'Admin2', 'Country_Region', 'Lat', 'Long_', 'Combined_Key'])
@@ -134,14 +145,15 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
                                            df_by_state['2020-03-10':data_date]
                                            .loc[:, state_province]
                                            .hvplot(
-                                                   title='Confirmed COVID-19 Cases',
+                                                   title='COVID-19 ' + confirmed_deaths,
                                                    logy=ylog,
                                                    width=600,
                                                    height=500,
-                                                   ylabel='# of Confirmed Cases',
+                                                   ylabel='# of ' + confirmed_deaths,
                                                    xlabel='Date',
                                                    legend='bottom',
-                                                   yformatter='%d'
+                                                   yformatter='%d',
+                                                   grid=True
                                            ),
                                            # A data table of counts by counties
                                            df_by_counties.query("Province_State == @state_province")
@@ -174,14 +186,15 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
     # to try to provide data tables and choropleth maps for several states
     else:
         panel_app: Panel = pn.Row(df_by_state['2020-03-10':data_date].loc[:, state_province].hvplot(
-                               title='Confirmed COVID-19 Cases',
+                               title='COVID-19 ' + confirmed_deaths,
                                logy=ylog,
-                               width=600,
+                               width=700,
                                height=500,
-                               ylabel='# of Confirmed Cases',
+                               ylabel='# of ' + confirmed_deaths,
                                xlabel='Date',
-                               legend='bottom',
-                               yformatter='%d'
+                               legend='right',
+                               yformatter='%d',
+                               grid=True
                               )
                            )
 
@@ -191,6 +204,7 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], ylog
 us_app = pn.Column(
           covid19_date,
           state_province,
+          confirmed_deaths,
           ylog,
           covid19TimeSeriesByState
       )
