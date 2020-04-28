@@ -45,7 +45,7 @@ states_provinces: List[str] = df['Province_State'].unique().tolist()
 covid19_date: DatePicker = pn.widgets.DatePicker(name='Date:', value=(date.today() + timedelta(days=-1)),
                                                  width=200, css_classes=['grey-theme']
                                                 )
-state_province = pn.widgets.MultiChoice(name='State of Province', value=['Ohio'],
+state_province = pn.widgets.MultiChoice(name='State:', value=['Ohio'],
     options=states_provinces)
 confirmed_deaths = pn.widgets.Select(name='Confirmed Cases or Deaths:', value='Confirmed Cases',
                                      options=['Confirmed Cases', 'Deaths'],
