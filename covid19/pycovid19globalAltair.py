@@ -102,7 +102,7 @@ def covid19TimeSeriesByCountry(covid19_date: Date, confirmed_deaths: str, countr
                          .rename(columns={'index': 'Date'})
                         ).mark_line().encode(
                          x=alt.X(title='Date', field='Date', type='temporal'),
-                         y=alt.Y(title='# of ' + 'Cases', field='Qty', type='quantitative', scale=alt.Scale(type=ylog)),
+                         y=alt.Y(title='# of ' + confirmed_deaths, field='Qty', type='quantitative', scale=alt.Scale(type=ylog)),
                          color=alt.Color(field='Country_Region', type='nominal', legend=alt.Legend(title="Country/Region")),
                          tooltip=[alt.Tooltip(field='Country_Region', type= 'nominal'),
                                   alt.Tooltip(field='Qty', type= 'quantitative'),

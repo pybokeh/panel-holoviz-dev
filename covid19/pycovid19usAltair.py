@@ -40,7 +40,7 @@ pn.config.raw_css.clear()
 pn.config.raw_css.append(css)
 
 url: str = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv'
-df: DataFrame = pd.read_csv(url)
+df: DataFrame = pd.read_csv(url).query("Province_State not in(['Diamond Princess', 'Grand Princess'])")
 
 # Create input widgets: date widget, multi-choice, and selection widgets
 # Make default date yesterday (today minus 1 day) since COVID-19 data is usually 1 day behind
@@ -97,8 +97,7 @@ def covid19TimeSeriesByState(covid19_date: Date, state_province: List[str], conf
     if 'Population' in df.columns:
         df.drop(columns='Population', inplace=True)
 
-    df_by_state: DataFrame = (df.query("not Province_State in('Diamond Princess', 'Grand Princess')")
-                                .drop(columns=['UID', 'iso2', 'iso3', 'code3', 'FIPS', 'Admin2', 'Country_Region', 'Lat', 'Long_', 'Combined_Key'])
+    df_by_state: DataFrame = (df.drop(columns=['UID', 'iso2', 'iso3', 'code3', 'FIPS', 'Admin2', 'Country_Region', 'Lat', 'Long_', 'Combined_Key'])
                                 .groupby('Province_State').agg('sum')
                                 .transpose()
                                 .reset_index()
